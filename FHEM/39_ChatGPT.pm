@@ -1,4 +1,4 @@
-# $Id: 39_ChatGPT.pm 13268 2024-10-22 00:00:00Z RalfP $
+# $Id: 39_ChatGPT.pm 13301 2024-10-23 00:00:00Z RalfP $
 ###############################################################################
 #
 # FHEM Modul für ChatGPT 
@@ -193,7 +193,7 @@ sub ChatGPT_parseRequestResponse {
 	 		#$hash->{helper}{model} = $responseData->{model};
 	 		#$hash->{helper}{choices}{index} = $responseData->{choices}[0]{index};
 	 		#$hash->{helper}{choices}{message}{role} = $responseData->{choices}[0]{message}{role};
-	 		#hash->{helper}{choices}{message}{content} = $responseData->{choices}[0]{message}{content};
+	 		#$hash->{helper}{choices}{message}{content} = $responseData->{choices}[0]{message}{content};
 	 		#$hash->{helper}{usage}{prompt_tokens} = $responseData->{usage}{prompt_tokens};
 	 		#$hash->{helper}{usage}{completion_tokens} = $responseData->{usage}{completion_tokens};
 	 		#$hash->{helper}{usage}{total_tokens} = $responseData->{usage}{total_tokens};
