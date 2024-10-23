@@ -24,7 +24,7 @@ sub ChatGPT_Initialize($) {
 	$hash->{DefFn}		= "ChatGPT_Define";
 	$hash->{SetFn}		= "ChatGPT_Set";
 	$hash->{GetFn}		= "ChatGPT_Get";
-	$hash->{AttrList}	= "model:gpt-4o,gpt-4o-mini,gpt-4,gpt-3.5-turbo ";
+	$hash->{AttrList}	= "model:gpt-4o,gpt-4o-mini,gpt-4,gpt-3.5-turbo expert:0,1 ";
 	$hash->{AttrList}  .= $readingFnAttributes;
 
 }
@@ -54,13 +54,22 @@ sub ChatGPT_Define($$) {
 sub ChatGPT_Set($$@) {
 	my ($hash, $name, $cmd, @args) = @_;
 
-	my $list = "ask";
+	my $list = "Request";
 
-	if ($cmd eq "ask") {
-		
-		my $question = join(' ', @args[0..$#args]);
-
-		ChatGPT_request($hash, $question);
+	if ($cmd eq "Request") {
+		my $content;
+		my $id = $args[0];
+		if($id =~ m/^ID:(.*)$/gm){
+			$id = $1;
+			$content = join(' ', @args[1..$#args]);
+			readingsSingleUpdate($hash, 'Request', "ID:"."$id $content", 1 );
+		}
+		else{
+			$id = '';
+			$content = join(' ', @args[0..$#args]);
+			readingsSingleUpdate($hash, 'Request', "$content", 1 );
+		}
+		ChatGPT_request($hash, $content, $id);
 
 		readingsSingleUpdate($hash, 'state', "request", 1 );
 
@@ -72,11 +81,11 @@ sub ChatGPT_Set($$@) {
 
 
 sub ChatGPT_request{
-	my ($hash, $content) = @_;
+	my ($hash, $content, $id) = @_;
 	my $name = $hash->{NAME};
 	
 	my $url = "https://api.openai.com/v1/chat/completions";
-
+	
 	my $apiKey	= ChatGPT_decrypt($hash->{helper}{apiKey});
 	
 	my $auth = "Bearer $apiKey";
@@ -104,6 +113,7 @@ sub ChatGPT_request{
 		"data"			=> $json_body, 
 		"hash"			=> $hash,
 		"command"		=> "getResponse",
+		"id"			=> $id,
 		"callback"		=> \&ChatGPT_parseRequestResponse,
 		"loglevel"		=> AttrVal($name, "verbose", 4)
 	};
@@ -214,24 +224,30 @@ sub ChatGPT_parseRequestResponse {
 	 		my $x_ratelimit_reset_tokens = $1;
 			
 			readingsBeginUpdate($hash); 	
-	 			readingsBulkUpdate($hash, "ID", $responseData->{id});
-	 			readingsBulkUpdate($hash, "Object", $responseData->{object});
-	 			readingsBulkUpdate($hash, "Created", $responseData->{created});
+	 			readingsBulkUpdate($hash, "SourceID", $param->{id});
 	 			readingsBulkUpdate($hash, "Model", $responseData->{model});
-				readingsBulkUpdate($hash, "Role", $responseData->{choices}[0]{message}{role});
-				readingsBulkUpdate($hash, "Content", encode('utf8',$responseData->{choices}[0]{message}{content}));
+				readingsBulkUpdate($hash, "Response", encode('utf8',$responseData->{choices}[0]{message}{content}));
 				readingsBulkUpdate($hash, "Tokens", $responseData->{usage}{total_tokens});
-	 			readingsBulkUpdate($hash, "x_ratelimit_limit_requests", $x_ratelimit_limit_requests);
-	 			readingsBulkUpdate($hash, "x_ratelimit_limit_tokens", $x_ratelimit_limit_tokens);
-	 			readingsBulkUpdate($hash, "x_ratelimit_remaining_requests", $x_ratelimit_remaining_requests);
 	 			readingsBulkUpdate($hash, "x_ratelimit_remaining_tokens", $x_ratelimit_remaining_tokens);
-	 			readingsBulkUpdate($hash, "x_ratelimit_reset_requests", $x_ratelimit_reset_requests);
-	 			readingsBulkUpdate($hash, "x_ratelimit_reset_tokens", $x_ratelimit_reset_tokens);
 	 			readingsBulkUpdate($hash, "error_message", '');
 	 			readingsBulkUpdate($hash, "error_type", '');
 	 			readingsBulkUpdate($hash, "error_param", '');
 	 			readingsBulkUpdate($hash, "error_code", '');
 			readingsEndUpdate($hash, 1);
+
+			if(AttrVal($name, 'expert', 0)){
+				readingsBeginUpdate($hash); 	
+		 			readingsBulkUpdate($hash, "ID", $responseData->{id});
+		 			readingsBulkUpdate($hash, "Object", $responseData->{object});
+		 			readingsBulkUpdate($hash, "Created", $responseData->{created});
+					readingsBulkUpdate($hash, "Role", $responseData->{choices}[0]{message}{role});
+		 			readingsBulkUpdate($hash, "x_ratelimit_limit_requests", $x_ratelimit_limit_requests);
+		 			readingsBulkUpdate($hash, "x_ratelimit_limit_tokens", $x_ratelimit_limit_tokens);
+		 			readingsBulkUpdate($hash, "x_ratelimit_remaining_requests", $x_ratelimit_remaining_requests);
+		 			readingsBulkUpdate($hash, "x_ratelimit_reset_requests", $x_ratelimit_reset_requests);
+		 			readingsBulkUpdate($hash, "x_ratelimit_reset_tokens", $x_ratelimit_reset_tokens);
+				readingsEndUpdate($hash, 1);
+			}
 
 			readingsSingleUpdate($hash, 'state', 'finish', 1 );
 		}
@@ -387,7 +403,7 @@ sub ChatGPT_decrypt {
 	</ul><br />
 	<a name="ChatGPT_Set" id="ChatGPT_Set"></a><b>Set</b>
 	<ul>
-		<li><b>ask</b><br />
+		<li><b>Request</b><br />
 			Text input.
 		</li>
 	</ul><br />  
@@ -426,7 +442,7 @@ sub ChatGPT_decrypt {
 	</ul><br />
 	<a name="ChatGPT_Set" id="ChatGPT_Set"></a><b>Set</b>
 	<ul>
-		<li><b>ask</b><br />
+		<li><b>Request</b><br />
 			Texteingabe.
 		</li>
 	</ul><br />  

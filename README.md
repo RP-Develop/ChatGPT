@@ -17,7 +17,7 @@ Ein kostenpflichtiger API-Key ist dafür notwendig. Zu Erstellen über die Profi
 
 API-Key wird in DEF verschlüsselt angezeigt.
 
-`set <name> ask <txt>`
+`set <name> Request <txt>`
 
 Texteingabe.
 
