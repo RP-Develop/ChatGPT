@@ -7,7 +7,7 @@ Dieses Fhem Modul stellt eine Verbindung zur OpenAI API zur Verfügung.
 
 **update**
 
-`update add https://raw.githubusercontent.com/RP-Develop/ChatGPT/main/controls_Zendure.txt`
+`update add https://raw.githubusercontent.com/RP-Develop/ChatGPT/main/controls_ChatGPT.txt`
 
 ### Voraussetzung:
 Ein kostenpflichtiger API-Key ist dafür notwendig. Zu Erstellen über die Profileinstellung deines OpenAI Accounts [OpenAI](https://platform.openai.com)
